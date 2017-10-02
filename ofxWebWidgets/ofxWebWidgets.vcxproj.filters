@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{d8eb76f6-5c34-42c3-a05c-cabfc151ed8e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ofxWebWidgets">
+      <UniqueIdentifier>{b1576c70-d47b-485d-a73f-912ccda04f54}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ofxWebWidgets\Widgets">
+      <UniqueIdentifier>{124d91b0-cfa9-4712-bada-cd467cf73a62}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\ofxWebWidgets.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ofxWebWidgets\Constants.h">
+      <Filter>src\ofxWebWidgets</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ofxWebWidgets\Server.h">
+      <Filter>src\ofxWebWidgets</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ofxWebWidgets\Widgets\Trackpad.h">
+      <Filter>src\ofxWebWidgets\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ofxWebWidgets\Widgets\Set.h">
+      <Filter>src\ofxWebWidgets\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ofxWebWidgets\Request.h">
+      <Filter>src\ofxWebWidgets</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ofxWebWidgets\RequestHandler.h">
+      <Filter>src\ofxWebWidgets</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ofxWebWidgets\Response.h">
+      <Filter>src\ofxWebWidgets</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\ofxWebWidgets\Server.cpp">
+      <Filter>src\ofxWebWidgets</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
