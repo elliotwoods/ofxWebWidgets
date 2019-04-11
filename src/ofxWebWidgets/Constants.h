@@ -5,7 +5,6 @@
 #include <list>
 #include <map>
 
-#include "Poco/Condition.h"
 #include "ofMain.h"
 
 #include "json.hpp"

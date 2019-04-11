@@ -1,4 +1,7 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include "Server.h"
+
+// for windows
 
 namespace ofxWebWidgets {
 	static const char* CONTENT_TYPE = "Content-Type";
@@ -114,7 +117,7 @@ namespace ofxWebWidgets {
 			if (contentType.size() > 31 && contentType.substr(0, 31) == "multipart/form-data; boundary=\"") {
 				contentType = "multipart/form-data; boundary=" + contentType.substr(31, contentType.size() - 32);
 				ofLogVerbose("ofxWebWidgets::Server") << "changing content type: " << contentType << endl;
-				strcpy(con_info->new_content_type, contentType.c_str());
+				strcpy_s(con_info->new_content_type, contentType.c_str());
 				MHD_set_connection_value(connection, MHD_HEADER_KIND, CONTENT_TYPE, con_info->new_content_type);
 			}
 			MHD_get_connection_values(connection, MHD_HEADER_KIND, print_out_key, NULL);
@@ -232,7 +235,7 @@ namespace ofxWebWidgets {
 				else if (binaryResponse) {
 					ret = send_page(connection
 						, binaryResponse->data.size()
-						, binaryResponse->data.getBinaryBuffer()
+						, binaryResponse->data.getData()
 						, binaryResponse->errorCode
 						, binaryResponse->contentType);
 				}
@@ -270,7 +273,7 @@ namespace ofxWebWidgets {
 			else {
 				ofBuffer buf;
 				file >> buf;
-				ret = send_page(connection, buf.size(), buf.getBinaryBuffer(), MHD_HTTP_OK);
+				ret = send_page(connection, buf.size(), buf.getData(), MHD_HTTP_OK);
 			}
 		}
 
@@ -396,7 +399,7 @@ namespace ofxWebWidgets {
 		struct MHD_Response *response;
 
 
-		response = MHD_create_response_from_data(length, (void*)page, MHD_NO, MHD_YES);
+		response = MHD_create_response_from_buffer(length, (void*)page, MHD_ResponseMemoryMode::MHD_RESPMEM_MUST_COPY);
 		if (!response) return MHD_NO;
 
 		if (contentType != "") {
@@ -418,7 +421,7 @@ namespace ofxWebWidgets {
 		struct MHD_Response *response;
 
 		char data[] = "";
-		response = MHD_create_response_from_data(0, data, MHD_NO, MHD_YES);
+		response = MHD_create_response_from_buffer(0, data, MHD_ResponseMemoryMode::MHD_RESPMEM_MUST_COPY);
 		if (!response) return MHD_NO;
 
 		MHD_add_response_header(response, "Location", location);
@@ -443,7 +446,7 @@ namespace ofxWebWidgets {
 				file >> buffer;
 				return send_page(connection
 					, buffer.size()
-					, buffer.getBinaryBuffer()
+					, buffer.getData()
 					, MHD_HTTP_SERVICE_UNAVAILABLE);
 			}
 		}
