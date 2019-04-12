@@ -3,8 +3,13 @@
 namespace ofxWebWidgets {
 	static const char* CONTENT_TYPE = "Content-Type";
 
+	struct CustomProcessor {
+		bool active = false;
+		stringstream data;
+	};
+
 	class connection_info {
-		static int id;
+		static size_t id;
 	public:
 		connection_info() {
 			conn_id = ++id;
@@ -19,9 +24,10 @@ namespace ofxWebWidgets {
 		struct MHD_PostProcessor *postprocessor;
 		int conn_id;
 		char new_content_type[1024];
+		CustomProcessor customProcessor;
 	};
 
-	int connection_info::id = 0;
+	size_t connection_info::id = 0;
 
 #pragma mark public
 	//-----------
@@ -36,8 +42,7 @@ namespace ofxWebWidgets {
 	}
 
 	//-----------
-	void Server::start(RequestHandler * requestHandler, const Parameters & parameters) {
-		this->requestHandler = requestHandler;
+	void Server::start(const Parameters & parameters) {
 		this->parameters = parameters;
 
 		this->stop();
@@ -67,6 +72,33 @@ namespace ofxWebWidgets {
 		return this->daemon != NULL;
 	}
 
+
+	//-----------
+	void Server::addRequestHandler(RequestHandler * requestHandler) {
+		//remove in-case somewhere else we have already added this handler
+		this->removeRequestHandler(requestHandler);
+		this->requestHandlers.insert(requestHandler);
+	}
+
+	//-----------
+	void Server::removeRequestHandler(RequestHandler * requestHandler) {
+		auto findRequesthandler = this->requestHandlers.find(requestHandler);
+		if (findRequesthandler != this->requestHandlers.end()) {
+			this->requestHandlers.erase(findRequesthandler);
+		}
+	}
+
+	//-----------
+	std::set<RequestHandler *> & Server::getRequestHandlers() {
+		return this->requestHandlers;
+	}
+
+
+	//-----------
+	const std::set<RequestHandler *> & Server::getRequestHandlers() const {
+		return this->requestHandlers;
+	}
+
 	//-----------
 	const Server::Parameters & Server::getParameters() const {
 		return this->parameters;
@@ -75,7 +107,7 @@ namespace ofxWebWidgets {
 #pragma mark private
 	//-----------
 	Server::Server() {
-
+		ofAddListener(ofEvents().exit, this, &Server::onExit);
 	}
 
 	//-----------
@@ -103,7 +135,7 @@ namespace ofxWebWidgets {
 			instance.activeClientCount++;
 
 			if (instance.activeClientCount >= parameters.maximumClients) {
-				return Server::send_error(503, connection);
+				return Server::send_error(connection, 503);
 			}
 
 			// super ugly hack to manage poco multi part post connections as it sets boundary between "" and
@@ -124,17 +156,16 @@ namespace ofxWebWidgets {
 				MHD_get_connection_values(connection, MHD_GET_ARGUMENT_KIND, get_get_parameters, con_info);
 			}
 			else if (strmethod == "POST") {
-
-
-				con_info->postprocessor = MHD_create_post_processor(connection, parameters.postBufferSize, iterate_post, (void*)con_info);
+				//con_info->postprocessor = MHD_create_post_processor(connection, parameters.postBufferSize, iterate_post, (void*)con_info);
+				
+				//HACK - we don't want to use the postprocessor, we want raw json
+				con_info->postprocessor = NULL;
 
 				if (NULL == con_info->postprocessor)
 				{
-					ofLogVerbose("ofxWebWidgets::Server") << "error creating postprocessor" << endl;
-					delete con_info;
-					return MHD_NO;
+					//attempt to process the data ourselves
+					con_info->customProcessor.active = true;
 				}
-
 				con_info->requestMethod = Request::POST;
 			}
 
@@ -150,9 +181,43 @@ namespace ofxWebWidgets {
 		string urlString(url);
 		int ret = MHD_HTTP_SERVICE_UNAVAILABLE;
 
+		Request request;
+
+		if (con_info->requestMethod == Request::Method::POST) {
+			if (con_info->customProcessor.active) {
+				//handle custom data (e.g. json)
+				if (*upload_data_size != 0) {
+					con_info->customProcessor.data << string(upload_data, *upload_data_size);
+					*upload_data_size = 0;
+					return MHD_YES;
+				}
+				else {
+					request.data = con_info->customProcessor.data.str();
+				}
+			}
+			else {
+				//handle post data with normal processor
+				if (*upload_data_size != 0) {
+					ret = MHD_post_process(con_info->postprocessor, upload_data, *upload_data_size);
+					*upload_data_size = 0;
+					return MHD_YES;
+				}
+				else {
+					map<string, FILE*>::iterator it;
+					for (it = con_info->file_fields.begin(); it != con_info->file_fields.end(); it++) {
+						if (it->second != NULL) {
+							fflush(it->second);
+							fclose(it->second);
+							request.uploadedFiles[con_info->file_to_key_index[it->first]] = con_info->file_to_path_index[it->first];
+						}
+					}
+				}
+			}
+		}
+
+
 
 		//construct the request
-		Request request;
 		{
 			request.url = urlString;
 
@@ -185,92 +250,108 @@ namespace ofxWebWidgets {
 					request.method = Request::Unknown;
 				}
 			}
-		}
 
-		//empty response is default until something fills it
-		shared_ptr<Response> response;
-
-		if (request.method == Request::Method::POST) {
-			//handle uploads
+			//path
 			{
-				if (*upload_data_size != 0) {
-					ret = MHD_post_process(con_info->postprocessor, upload_data, *upload_data_size);
-					*upload_data_size = 0;
-				}
-				else {
-					map<string, FILE*>::iterator it;
-					for (it = con_info->file_fields.begin(); it != con_info->file_fields.end(); it++) {
-						if (it->second != NULL) {
-							fflush(it->second);
-							fclose(it->second);
-							request.uploadedFiles[con_info->file_to_key_index[it->first]] = con_info->file_to_path_index[it->first];
-						}
+				auto pathVector = ofSplitString(urlString, "/");
+				request.path.assign(pathVector.begin(), pathVector.end());
+
+				//strip element before first /
+				request.path.pop_front();
+			}
+
+			//json
+			{
+				if (!request.data.empty()) {
+					try {
+						request.dataJson = json::parse(request.data);
+					}
+					catch (...) {
+
 					}
 				}
 			}
 		}
 
-		//handle requests
-		{
-			if (instance.requestHandler) {
-				instance.requestHandler->handleRequest(request, response);
+		//empty response is default until something fills it
+		shared_ptr<Response> response;
+
+		try {
+			//handle requests
+			{
+				for (const auto & requestHandler : instance.requestHandlers) {
+					if (requestHandler) {
+						requestHandler->handleRequest(request, response);
+					}
+				}
 			}
 
-			if (response) {
-				auto textResponse = dynamic_pointer_cast<ResponseText>(response);
-				auto binaryResponse = dynamic_pointer_cast<ResponseBinary>(response);
-				auto jsonResponse = dynamic_pointer_cast<ResponseJson>(response);
-				auto redirectResponse = dynamic_pointer_cast<ResponseRedirect>(response);
+			//try to serve a page if we haven't got a handled response
+			if (!response) {
+				//we haven't made a response yet, let's try and serve a file instead
 
-				if (textResponse) {
-					ret = send_page(connection
-						, textResponse->text.size()
-						, textResponse->text.c_str()
-						, textResponse->errorCode
-						, textResponse->contentType);
+				//server-side redirect for /
+				if (urlString == "/") {
+					urlString = "/index.html";
 				}
-				else if (binaryResponse) {
-					ret = send_page(connection
-						, binaryResponse->data.size()
-						, binaryResponse->data.getBinaryBuffer()
-						, binaryResponse->errorCode
-						, binaryResponse->contentType);
-				}
-				else if (jsonResponse) {
-					auto responseString = jsonResponse->data.dump();
-					ret = send_page(connection
-						, responseString.size()
-						, responseString.c_str()
-						, jsonResponse->errorCode
-						, jsonResponse->contentType);
-				}
-				else if (redirectResponse) {
-					ret = send_redirect(connection
-						, redirectResponse->location.c_str()
-						, redirectResponse->errorCode);
-				}
+
+				response = serveFile(urlString, true);
 			}
 		}
+		catch (std::exception & e) {
+			response = make_shared<ResponseJson>(json{
+				{"success", false},
+				{"error", e.what()}
+			});
+		}
 
-		if (!response) {
-			//we haven't made a response yet, let's try and serve a file instead
+		//send the response
+		if (response) { //this should always be true
+			auto textResponse = dynamic_pointer_cast<ResponseText>(response);
+			auto binaryResponse = dynamic_pointer_cast<ResponseBinary>(response);
+			auto jsonResponse = dynamic_pointer_cast<ResponseJson>(response);
+			auto redirectResponse = dynamic_pointer_cast<ResponseRedirect>(response);
+			auto errorResponse = dynamic_pointer_cast<ResponseError>(response);
 
-			//server-side redirect for /
-			if (urlString == "/") {
-				urlString = "/index.html";
+			if (textResponse) {
+				ret = send_page(connection
+					, textResponse->data.size()
+					, textResponse->data.c_str()
+					, textResponse->errorCode
+					, textResponse->contentType);
 			}
+			else if (binaryResponse) {
+				ret = send_page(connection
+					, binaryResponse->data.size()
+					, binaryResponse->data.getBinaryBuffer()
+					, binaryResponse->errorCode
+					, binaryResponse->contentType);
+			}
+			else if (jsonResponse) {
+				json jsonResponseWrapped = {
+					{"success" , true},
+					{"data", jsonResponse->data}
+				};
 
-			ofFile file(instance.parameters.staticRoot + urlString
-				, ofFile::ReadOnly
-				, true);
+				auto responseString = jsonResponseWrapped.dump();
 
-			if (!file.exists()) {
-				return Server::send_error(404, connection);
+				ret = send_page(connection
+					, responseString.size()
+					, responseString.c_str()
+					, jsonResponse->errorCode
+					, jsonResponse->contentType);
+			}
+			else if (redirectResponse) {
+				ret = send_redirect(connection
+					, redirectResponse->location.c_str()
+					, redirectResponse->errorCode);
 			}
 			else {
-				ofBuffer buf;
-				file >> buf;
-				ret = send_page(connection, buf.size(), buf.getBinaryBuffer(), MHD_HTTP_OK);
+				if (!errorResponse) {
+					errorResponse = make_shared<ResponseError>(404);
+				}
+				ret = send_error(connection
+					, errorResponse->errorCode);
 			}
 		}
 
@@ -400,7 +481,7 @@ namespace ofxWebWidgets {
 		if (!response) return MHD_NO;
 
 		if (contentType != "") {
-			MHD_add_response_header(response, "Content-Type", contentType.c_str());
+			MHD_add_response_header(response, CONTENT_TYPE, contentType.c_str());
 		}
 
 		ret = MHD_queue_response(connection, status_code, response);
@@ -430,7 +511,8 @@ namespace ofxWebWidgets {
 	}
 
 	//----------
-	int Server::send_error(unsigned short errorCode, struct MHD_Connection * connection) {
+	int Server::send_error(struct MHD_Connection * connection
+		, unsigned short errorCode) {
 		auto & instance = Server::X();
 
 		//try and load error file
@@ -456,5 +538,10 @@ namespace ofxWebWidgets {
 				, html.c_str()
 				, MHD_HTTP_SERVICE_UNAVAILABLE);
 		}
+	}
+
+	//-----------
+	void Server::onExit(ofEventArgs &) {
+		this->stop();
 	}
 }

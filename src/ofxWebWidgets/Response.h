@@ -8,54 +8,61 @@ namespace ofxWebWidgets {
 		Binary,
 		Json,
 		Redirect,
-		Error404
+		Error
 	};
 
 	struct Response {
-		virtual ResponseType getResponseType() = 0;
+		Response(const ResponseType responseType)
+			: responseType(responseType) { }
+		virtual ~Response() { }
+
 		unsigned short errorCode = MHD_HTTP_OK;
+		const ResponseType responseType;
 	};	
 
 	struct ResponseText : Response {
-		ResponseType getResponseType() override {
-			return ResponseType::Text;
-		}
-		string text;
+		ResponseText(const string & data)
+			: Response(Text)
+			, data(data) {}
+
+		string data;
 		string contentType = "text/html";
 	};
 
 	struct ResponseBinary : Response {
-		ResponseType getResponseType() override {
-			return ResponseType::Binary;
-		}
+		ResponseBinary(const ofBuffer & data)
+			: Response(Binary)
+			, data(data) {}
+
 		ofBuffer data;
 		string contentType = "application/octet-stream";
 	};
 
 	struct ResponseJson : Response {
-		ResponseType getResponseType() override {
-			return ResponseType::Json;
-		}
+		ResponseJson(const json & data)
+			: Response(Json)
+			, data(data) {}
+
 		json data;
 		string contentType = "application/json";
 	};
 
 	struct ResponseRedirect : Response {
-		ResponseRedirect() {
+		ResponseRedirect(const string & location)
+			: Response(Redirect)
+			, location(location) {
 			this->errorCode = MHD_HTTP_TEMPORARY_REDIRECT;
 		}
-		ResponseType getResponseType() override {
-			return ResponseType::Redirect;
-		}
+
 		string location;
 	};
 
-	struct Response404 : Response {
-		Response404() {
-			this->errorCode = 404;
-		}
-		ResponseType getResponseType() override {
-			return ResponseType::Error404;
+	struct ResponseError : Response {
+		ResponseError(unsigned short errorCode)
+			: Response(Error) {
+			this->errorCode = errorCode;
 		}
 	};
+
+	shared_ptr<Response> serveFile(const std::string & path, bool addDocumentRoot);
 }

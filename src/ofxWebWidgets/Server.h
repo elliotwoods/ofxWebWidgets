@@ -8,22 +8,26 @@ namespace ofxWebWidgets {
 	class Server {
 	public:
 		struct Parameters {
-			string staticRoot = "http/www";
+			string staticRoot = "http/DocumentRoot";
 			string uploadFolder = "http/upload";
 			string errorsFolder = "http/errors";
 			unsigned short port = 8888;
 			unsigned short maximumClients = 100;
 			unsigned short maximumActiveClients = 4;
-			size_t postBufferSize = 4 * 1024;
+			size_t postBufferSize = 64 * 1024;
 		};
 
 		static Server & X();
 		virtual ~Server();
 
-		void start(RequestHandler * requestHandler
-			, const Parameters & = Parameters());
+		void start(const Parameters & = Parameters());
 		void stop();
 		bool isRunning() const;
+
+		void addRequestHandler(RequestHandler *);
+		void removeRequestHandler(RequestHandler *);
+		set<RequestHandler *> & getRequestHandlers();
+		const set<RequestHandler *> & getRequestHandlers() const;
 
 		const Parameters & getParameters() const;
 	private:
@@ -31,7 +35,7 @@ namespace ofxWebWidgets {
 		Parameters parameters;
 
 		struct MHD_Daemon * daemon;
-		RequestHandler * requestHandler = NULL;
+		set<RequestHandler *> requestHandlers;
 
 		atomic<size_t> activeClientCount{ 0 };
 
@@ -79,8 +83,10 @@ namespace ofxWebWidgets {
 			, uint64_t off
 			, size_t size);
 
-		static int send_error(unsigned short errorCode
-			, struct MHD_Connection * connection);
+		static int send_error(struct MHD_Connection * connection
+			, unsigned short errorCode);
+
+		void onExit(ofEventArgs &);
 	};
 }
 

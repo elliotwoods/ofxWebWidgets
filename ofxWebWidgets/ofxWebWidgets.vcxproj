@@ -25,11 +25,21 @@
     <ClInclude Include="..\src\ofxWebWidgets\RequestHandler.h" />
     <ClInclude Include="..\src\ofxWebWidgets\Response.h" />
     <ClInclude Include="..\src\ofxWebWidgets\Server.h" />
+    <ClInclude Include="..\src\ofxWebWidgets\Widgets\Base.h" />
+    <ClInclude Include="..\src\ofxWebWidgets\Widgets\EditableValue.h" />
+    <ClInclude Include="..\src\ofxWebWidgets\Widgets\LiveValue.h" />
     <ClInclude Include="..\src\ofxWebWidgets\Widgets\Set.h" />
     <ClInclude Include="..\src\ofxWebWidgets\Widgets\Trackpad.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\ofxWebWidgets\Request.cpp" />
+    <ClCompile Include="..\src\ofxWebWidgets\Response.cpp" />
     <ClCompile Include="..\src\ofxWebWidgets\Server.cpp" />
+    <ClCompile Include="..\src\ofxWebWidgets\Widgets\Base.cpp" />
+    <ClCompile Include="..\src\ofxWebWidgets\Widgets\EditableValue.cpp" />
+    <ClCompile Include="..\src\ofxWebWidgets\Widgets\LiveValue.cpp" />
+    <ClCompile Include="..\src\ofxWebWidgets\Widgets\Set.cpp" />
+    <ClCompile Include="..\src\ofxWebWidgets\Widgets\Trackpad.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{5C557280-E9E7-4789-83F6-7185A89772BD}</ProjectGuid>

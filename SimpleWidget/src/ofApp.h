@@ -3,7 +3,8 @@
 #include "ofMain.h"
 #include "ofxWebWidgets.h"
 
-class ofApp : public ofBaseApp, public ofxWebWidgets::RequestHandler {
+class ofApp : public ofBaseApp{
+
 	public:
 		void setup();
 		void update();
@@ -20,7 +21,9 @@ class ofApp : public ofBaseApp, public ofxWebWidgets::RequestHandler {
 		void windowResized(int w, int h);
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
+
+		ofxWebWidgets::Widgets::Set widgetsSet;
 		
-		void handleRequest(const ofxWebWidgets::Request & request
-			, shared_ptr<ofxWebWidgets::Response> & response) override;
+		ofColor color;
+		ofVec2f position;
 };

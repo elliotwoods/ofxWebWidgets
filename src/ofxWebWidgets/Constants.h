@@ -20,11 +20,9 @@ using json = nlohmann::json;
 #endif
 
 typedef SSIZE_T ssize_t;
+using namespace std;
 
 extern "C" {
 #include "microhttpd.h"
 }
 
-namespace ofxWebWidgets {
-	typedef std::list<std::string> Path;
-}

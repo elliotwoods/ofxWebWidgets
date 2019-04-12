@@ -21,9 +21,6 @@
     <ClInclude Include="..\src\ofxWebWidgets\Server.h">
       <Filter>src\ofxWebWidgets</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ofxWebWidgets\Widgets\Trackpad.h">
-      <Filter>src\ofxWebWidgets\Widgets</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\ofxWebWidgets\Widgets\Set.h">
       <Filter>src\ofxWebWidgets\Widgets</Filter>
     </ClInclude>
@@ -36,10 +33,43 @@
     <ClInclude Include="..\src\ofxWebWidgets\Response.h">
       <Filter>src\ofxWebWidgets</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ofxWebWidgets\Widgets\LiveValue.h">
+      <Filter>src\ofxWebWidgets\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ofxWebWidgets\Widgets\Base.h">
+      <Filter>src\ofxWebWidgets\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ofxWebWidgets\Widgets\EditableValue.h">
+      <Filter>src\ofxWebWidgets\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ofxWebWidgets\Widgets\Trackpad.h">
+      <Filter>src\ofxWebWidgets\Widgets</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ofxWebWidgets\Server.cpp">
       <Filter>src\ofxWebWidgets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ofxWebWidgets\Widgets\Set.cpp">
+      <Filter>src\ofxWebWidgets\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ofxWebWidgets\Widgets\Base.cpp">
+      <Filter>src\ofxWebWidgets\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ofxWebWidgets\Response.cpp">
+      <Filter>src\ofxWebWidgets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ofxWebWidgets\Widgets\LiveValue.cpp">
+      <Filter>src\ofxWebWidgets\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ofxWebWidgets\Request.cpp">
+      <Filter>src\ofxWebWidgets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ofxWebWidgets\Widgets\EditableValue.cpp">
+      <Filter>src\ofxWebWidgets\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ofxWebWidgets\Widgets\Trackpad.cpp">
+      <Filter>src\ofxWebWidgets\Widgets</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

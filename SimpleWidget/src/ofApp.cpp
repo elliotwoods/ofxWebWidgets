@@ -3,20 +3,63 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
 	auto & server = ofxWebWidgets::Server::X();
-	server.addRequestHandler(this);
 	server.start();
+	server.addRequestHandler(&this->widgetsSet);
 
-	ofLaunchBrowser("http://localhost:8888");
+	{
+		auto widget = make_shared<ofxWebWidgets::Widgets::LiveValue<float>>(
+			"Framerate"
+			, []() {
+				return ofGetFrameRate();
+			}
+		);
+		this->widgetsSet.add(widget);
+	}
+
+	{
+		auto widget = make_shared<ofxWebWidgets::Widgets::EditableValue<ofColor>>(
+			"Color"
+			, [this]() {
+				return this->color;
+			}
+			, [this](ofColor value) {
+				this->color = value;
+			}
+		);
+		this->widgetsSet.add(widget);
+	}
+
+	{
+		auto widget = make_shared<ofxWebWidgets::Widgets::Trackpad>(
+			"Position"
+			, ofVec2f(0, 0)
+			, ofVec2f(ofGetWidth(), ofGetHeight())
+			, [this]() {
+			return this->position;
+		}
+			, [this](ofVec2f value) {
+			this->position = value;
+		}
+		);
+		this->widgetsSet.add(widget);
+	}
+
+	this->color = 0;
+	this->position = {
+		ofGetWidth() / 2.0f,
+		ofGetHeight() / 2.0f
+	};
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
-
+	ofBackground(this->color);
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-
+	ofLine(this->position.x, 0, this->position.x, ofGetHeight());
+	ofLine(0, this->position.y, ofGetWidth(), this->position.y);
 }
 
 //--------------------------------------------------------------
@@ -36,12 +79,14 @@ void ofApp::mouseMoved(int x, int y ){
 
 //--------------------------------------------------------------
 void ofApp::mouseDragged(int x, int y, int button){
-
+	this->position.x = x;
+	this->position.y = y;
 }
 
 //--------------------------------------------------------------
 void ofApp::mousePressed(int x, int y, int button){
-
+	this->position.x = x;
+	this->position.y = y;
 }
 
 //--------------------------------------------------------------
@@ -72,47 +117,4 @@ void ofApp::gotMessage(ofMessage msg){
 //--------------------------------------------------------------
 void ofApp::dragEvent(ofDragInfo dragInfo){ 
 
-}
-
-//--------------------------------------------------------------
-void ofApp::handleRequest(const ofxWebWidgets::Request & request
-	, shared_ptr<ofxWebWidgets::Response> & response) {
-	try {
-		if (request.url == "/json") {
-			auto responseJson = make_shared<ofxWebWidgets::ResponseJson>(json{
-				{ "frameRate",  ofGetFrameRate() },
-				{ "frameNumber",  ofGetFrameNum() },
-				{ "upTime",  ofGetElapsedTimef() }
-			});
-			response = responseJson;
-		}
-		else if (request.url == "/black") {
-			ofSetBackgroundColor(0);
-		}
-		else if (request.url == "/white") {
-			ofSetBackgroundColor(255);
-		}
-		else if (request.url == "/exception") {
-			throw(std::bad_function_call());
-		}
-		else {
-			//don't make a response
-			return;
-		}
-
-		//standard response
-		if (!response) {
-			auto responseJson = make_shared<ofxWebWidgets::ResponseJson>(json{
-				{ "success", true }
-			});
-			response = responseJson;
-		}
-	}
-	catch (exception & e) {
-		auto responseJson = make_shared<ofxWebWidgets::ResponseJson>(json{
-			{ "success",  false },
-			{ "error",  e.what() }
-		});
-		response = responseJson;
-	}
 }
