@@ -39,7 +39,7 @@ namespace ofxWebWidgets {
 
 		atomic<size_t> activeClientCount{ 0 };
 
-		static int handleConnection(void * cls
+		static enum MHD_Result handleConnection(void * cls
 			, struct MHD_Connection * connection
 			, const char * url
 			, const char * method
@@ -48,23 +48,23 @@ namespace ofxWebWidgets {
 			, size_t * upload_data_size
 			, void ** con_cls);
 
-		static int print_out_key(void *cls
+		static MHD_Result print_out_key(void *cls
 			, enum MHD_ValueKind kind
 			, const char * key
 			, const char * value);
 
-		static int get_get_parameters(void *cls
+		static MHD_Result get_get_parameters(void *cls
 			, enum MHD_ValueKind kind
 			, const char * key
 			, const char * value);
 
-		static int send_page(struct MHD_Connection *connection
+		static MHD_Result send_page(struct MHD_Connection *connection
 			, long length
 			, const char * page
 			, int status_code
 			, std::string contentType = "");
 
-		static int send_redirect(struct MHD_Connection *connection
+		static MHD_Result send_redirect(struct MHD_Connection *connection
 			, const char * location
 			, int status_code);
 
@@ -83,7 +83,7 @@ namespace ofxWebWidgets {
 			, uint64_t off
 			, size_t size);
 
-		static int send_error(struct MHD_Connection * connection
+		static MHD_Result send_error(struct MHD_Connection * connection
 			, unsigned short errorCode);
 
 		void onExit(ofEventArgs &);

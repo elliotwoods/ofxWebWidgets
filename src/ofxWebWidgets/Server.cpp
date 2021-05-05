@@ -112,7 +112,7 @@ namespace ofxWebWidgets {
 	}
 
 	//-----------
-	int Server::handleConnection(void * cls
+	MHD_Result Server::handleConnection(void * cls
 		, struct MHD_Connection * connection
 		, const char * url
 		, const char * method
@@ -180,7 +180,7 @@ namespace ofxWebWidgets {
 
 		// second and next iterations
 		string urlString(url);
-		int ret = MHD_HTTP_SERVICE_UNAVAILABLE;
+		MHD_Result ret = MHD_Result::MHD_NO;
 
 		Request request;
 
@@ -360,7 +360,7 @@ namespace ofxWebWidgets {
 	}
 
 	//-----------
-	int Server::print_out_key(void * cls
+	MHD_Result Server::print_out_key(void * cls
 		, enum MHD_ValueKind kind
 		, const char * key
 		, const char * value) {
@@ -370,7 +370,7 @@ namespace ofxWebWidgets {
 
 
 	//-----------
-	int Server::get_get_parameters(void *cls
+	MHD_Result Server::get_get_parameters(void *cls
 		, enum MHD_ValueKind kind
 		, const char * key
 		, const char * value) {
@@ -469,12 +469,12 @@ namespace ofxWebWidgets {
 	}
 
 	//-----------
-	int Server::send_page(struct MHD_Connection *connection
+	MHD_Result Server::send_page(struct MHD_Connection *connection
 		, long length
 		, const char * page
 		, int status_code
 		, string contentType) {
-		int ret;
+		MHD_Result ret;
 		struct MHD_Response *response;
 
 
@@ -492,11 +492,11 @@ namespace ofxWebWidgets {
 	}
 
 	//-----------
-	int Server::send_redirect(struct MHD_Connection *connection
+	MHD_Result Server::send_redirect(struct MHD_Connection *connection
 		, const char* location
 		, int status_code) {
 
-		int ret;
+		MHD_Result ret;
 		struct MHD_Response *response;
 
 		char data[] = "";
@@ -512,7 +512,7 @@ namespace ofxWebWidgets {
 	}
 
 	//----------
-	int Server::send_error(struct MHD_Connection * connection
+	MHD_Result Server::send_error(struct MHD_Connection * connection
 		, unsigned short errorCode) {
 		auto & instance = Server::X();
 
